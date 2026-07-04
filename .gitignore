@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+# large artifacts never belong in git
+data/
+*.npy
+*.parquet
+*.safetensors
+*.tgz
+*.gguf
+ckpt*/
+*_results/
+.DS_Store
