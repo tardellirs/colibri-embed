@@ -139,21 +139,30 @@ Full run log & numbers: [`RESULTS.md`](RESULTS.md). Orchestrator: [`scripts/run_
 
 ```
 scripts/
-  retrim_vocab.py             # 1. vocabulary trimming (domain-aware)
-  build_distill_v2_corpus.py  # 2a. assemble the ~100k PT-BR corpus (eval rows held out)
-  get_stackoverflow_pt.py     #     Stack Overflow em Português source
-  distill_precompute.py       # 2b. precompute teacher (Qwen3-4B + 8B) embeddings
-  distill_train.py            # 2c. multi-teacher relational KD
-  soup_eval.py                # 3a. checkpoint soup + alpha merge
-  extend_sweep.py             # 3b. fine alpha sweep (mean_21 → mean_22 on best)
-  interpolate_eval.py         #     base↔ft weight interpolation + MTEB harness
-  run_mtebpt.py               #     MTEB(por) evaluation
-  cpu_bench.py                #     CPU latency / RAM benchmark
-  variant_quality.py          #     Matryoshka / precision variant quality
-  make_colibri_pareto.py      #     the frontier figure above
-  run_distill_v2.sh           #     end-to-end orchestrator
+  # 1 · vocabulary trimming
+  build_retrim_corpus.py      #    token-selection corpus (domains + Stack Overflow PT)
+  get_stackoverflow_pt.py     #    Stack Overflow em Português source
+  retrim_vocab.py             #    domain-aware 64k re-trim (300M → ~157M)
+  compare_trims.py            #    pick the best trim base on MTEB(por)
+  # 2 · multi-teacher distillation
+  build_distill_v2_corpus.py  #    assemble the ~100k PT-BR corpus (eval rows held out)
+  distill_precompute.py       #    precompute teacher (Qwen3-4B + 8B) embeddings
+  distill_train.py            #    multi-teacher relational KD (avg of two sim-matrices)
+  select_best.py              #    checkpoint selection by FaqBacen proxy
+  # 3 · model soup + merge
+  soup_eval.py                #    checkpoint soup + alpha merge
+  extend_sweep.py             #    fine alpha sweep (cheap mean_21 → mean_22 on the peak)
+  interpolate_eval.py         #    base↔ft weight interpolation + MTEB harness
+  # evaluation · benchmark · figure
+  run_mtebpt.py               #    official MTEB(por) 22-task evaluation
+  cpu_bench.py                #    CPU latency / RAM benchmark
+  variant_quality.py          #    Matryoshka dims + fp16 quality
+  make_colibri_pareto.py      #    the frontier figure above
+  run_distill_v2.sh           #    end-to-end orchestrator
+  run_compare.sh · run_cpu_bench.sh · run_bench.sh · run_quality.sh
+docs/teacher_survey.md        # why Qwen3-4B + 8B (multi-teacher rationale)
 figures/pareto.png
-RESULTS.md
+RESULTS.md                    # full run log & per-task numbers
 ```
 
 ---
