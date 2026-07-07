@@ -175,7 +175,7 @@ RESULTS.md                    # full run log & per-task numbers
 
 ## 🙏 Acknowledgments
 
-We gratefully acknowledge **[Verda](https://verda.com/?utm_content=mteb-br)** for the GPU compute credits that
+We gratefully acknowledge **[Verda](https://verda.com/?utm_content=mteb-pt)** for the GPU compute credits that
 supported this work, and the **[MTEB(por)](https://huggingface.co/spaces/MTEB-BR/leaderboard)** benchmark maintainers.
 
 <div align="center">
