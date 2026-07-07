@@ -5,7 +5,7 @@
 **A tiny embedding model that punches far above its weight.**
 
 [![🤗 Model](https://img.shields.io/badge/🤗%20Hugging%20Face-Model-yellow)](https://huggingface.co/tardellirs/colibri-embed-ptbr)
-[![MTEB(por)](https://img.shields.io/badge/MTEB(por)-0.6501-1f6feb)](https://huggingface.co/spaces/mteb-pt/leaderboard)
+[![MTEB(por)](https://img.shields.io/badge/MTEB(por)-0.6501-1f6feb)](https://huggingface.co/spaces/MTEB-BR/leaderboard)
 [![Params](https://img.shields.io/badge/params-~157M-informational)](#)
 [![Dim](https://img.shields.io/badge/dim-768-informational)](#)
 [![License](https://img.shields.io/badge/model-Gemma-green)](https://ai.google.dev/gemma/terms)
@@ -54,7 +54,7 @@ Colibri sits on the **open-model Pareto frontier** for MTEB(por) — it **domina
 | microsoft/harrier-oss-v1-27b | 27B | 0.6390 |
 | BAAI/bge-m3 | 568M | 0.6157 |
 
-> Evaluated on **[MTEB(por)](https://huggingface.co/spaces/mteb-pt/leaderboard)** — 22 native Brazilian-Portuguese tasks
+> Evaluated on **[MTEB(por)](https://huggingface.co/spaces/MTEB-BR/leaderboard)** — 22 native Brazilian-Portuguese tasks
 > (retrieval, reranking, STS, classification, clustering, pair-classification). Score = mean over the 22 tasks.
 
 ---
@@ -175,8 +175,8 @@ RESULTS.md                    # full run log & per-task numbers
 
 ## 🙏 Acknowledgments
 
-We gratefully acknowledge **[Verda](https://verda.com/?utm_content=mteb-pt)** for the GPU compute credits that
-supported this work, and the **[MTEB(por)](https://huggingface.co/spaces/mteb-pt/leaderboard)** benchmark maintainers.
+We gratefully acknowledge **[Verda](https://verda.com/?utm_content=mteb-br)** for the GPU compute credits that
+supported this work, and the **[MTEB(por)](https://huggingface.co/spaces/MTEB-BR/leaderboard)** benchmark maintainers.
 
 <div align="center">
 Built with vocabulary trimming · multi-teacher relational knowledge distillation · model soup. 🐦

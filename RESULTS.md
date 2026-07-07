@@ -1,6 +1,6 @@
 # Independent-corpus distillation — results
 
-**Goal:** improve `tardellirs/embeddinggemma-pt-br` (64k-vocab trim of embeddinggemma-300m, ~157M effective) on MTEB(por) WITHOUT training on any MTEB-PT task-source dataset ("no benchmark chasing"). Method: relational KD from Qwen3-Embedding-4B on a 67,544-passage corpus mined from INDEPENDENT same-domain PT-BR sources, then weight-merge the distilled student with the base.
+**Goal:** improve `tardellirs/embeddinggemma-pt-br` (64k-vocab trim of embeddinggemma-300m, ~157M effective) on MTEB(por) WITHOUT training on any MTEB-BR task-source dataset ("no benchmark chasing"). Method: relational KD from Qwen3-Embedding-4B on a 67,544-passage corpus mined from INDEPENDENT same-domain PT-BR sources, then weight-merge the distilled student with the base.
 
 ## Corpus (67,544 passages, zero task-source overlap)
 web 25k (fineweb-2) · banking 14.2k (BBRC+bacen2024) · legal 12k (STJ acórdãos) · scientific 8k (Carolina uni) · fiscal 4.7k (CTN+tax laws) · medical 3.7k (BDTD+Wiki-PT+gov.br).

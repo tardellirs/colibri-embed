@@ -12,8 +12,8 @@ if [ ! -f venv/.deps ]; then
   pip install -q "numpy<2" torch transformers sentence-transformers accelerate mteb
   touch venv/.deps
 fi
-[ -d mteb-pt ] || git clone --depth=1 https://github.com/tardellirs/mteb-pt.git
-pip install -q -e ./mteb-pt/
+[ -d mteb-br ] || git clone --depth=1 https://github.com/tardellirs/mteb-br.git
+pip install -q -e ./mteb-br/
 rm -rf /root/.cache/mteb/results/no_model_name* 2>/dev/null || true
 python3 variant_quality.py
 echo "QUALITY ALL DONE"

@@ -1,7 +1,7 @@
 # MTEB(por) Teacher Survey for Knowledge Distillation into embeddinggemma-pt-br
 
 **Student model:** `tardellirs/embeddinggemma-pt-br` (~157M effective params, embedding dim 768)
-**Source leaderboard:** `mteb-pt/mteb-pt-results` (score_matrix.parquet, 93 models × 22 tasks, fetched 2026-07-02)
+**Source leaderboard:** `MTEB-BR/mteb-pt-results` (score_matrix.parquet, 93 models × 22 tasks, fetched 2026-07-02)
 **Constraint:** Open-weight models only (type = "O"); closed/API models excluded.
 **Student overall rank:** #13 of 93 (open rank #9 of 73), mean_22 = 0.6490
 
@@ -561,11 +561,11 @@ The best open models for this task are BERTimbau-based models with no strong emb
 
 ## 8. Data Provenance
 
-- Scores: `mteb-pt/mteb-pt-results` dataset, file `score_matrix.parquet`, revision `fab798de` (last updated 2026-07-01), 93 models × 27 columns (22 task scores + rank/params/type/mean_22).
+- Scores: `MTEB-BR/mteb-pt-results` dataset, file `score_matrix.parquet`, revision `fab798de` (last updated 2026-07-01), 93 models × 27 columns (22 task scores + rank/params/type/mean_22).
 - Embedding dims: fetched from `config.json` of each model's HF repository via the HF API on 2026-07-02.
 - No scores were interpolated or invented; all values are exactly as stored in the parquet.
 - Models marked `type = "C"` (closed/API) were excluded from teacher rankings throughout.
 
 ---
 
-*Generated 2026-07-02 from live MTEB-PT leaderboard data.*
+*Generated 2026-07-02 from live MTEB-BR leaderboard data.*

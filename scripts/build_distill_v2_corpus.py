@@ -14,11 +14,11 @@ _ws = re.compile(r"\s+")
 def norm(t): return _ws.sub(" ", (t or "")).strip()
 def key(t): return norm(t).lower()[:200]
 
-# ---- eval rows to hold out (load the mteb-pt eval subsets, exclude by text) ----
+# ---- eval rows to hold out (load the MTEB-BR eval subsets, exclude by text) ----
 EVAL = set()
-for rid, split in [("mteb-pt/wikipedia-categories", "train"),      # WikiCat evals on TRAIN
-                   ("mteb-pt/stackoverflow-clustering", "test"),
-                   ("mteb-pt/scielo-clustering", "test")]:
+for rid, split in [("MTEB-BR/wikipedia-categories", "train"),      # WikiCat evals on TRAIN
+                   ("MTEB-BR/stackoverflow-clustering", "test"),
+                   ("MTEB-BR/scielo-clustering", "test")]:
     try:
         ds = load_dataset(rid, split=split, token=TOK)
         col = "sentences" if "sentences" in ds.column_names else ds.column_names[0]

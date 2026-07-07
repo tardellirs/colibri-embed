@@ -7,7 +7,7 @@ clustering. We only need its embeddings (unit-normalized) so the student can
 later learn to reproduce the teacher's pairwise-similarity geometry (relational
 KD — dimension-agnostic).
 
-Corpus: diverse PT passages (mMARCO-pt) — external, no MTEB-PT test overlap.
+Corpus: diverse PT passages (mMARCO-pt) — external, no MTEB-BR test overlap.
 
 Output: data/distill_corpus.parquet  (columns: text, and a .npy of teacher embs)
 """

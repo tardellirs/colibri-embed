@@ -21,8 +21,8 @@ if [ ! -f venv/.deps ]; then
   pip install -q "numpy<2" torch transformers sentence-transformers accelerate mteb
   touch venv/.deps
 fi
-[ -d mteb-pt ] || git clone --depth=1 https://github.com/tardellirs/mteb-pt.git
-pip install -q -e ./mteb-pt/
+[ -d mteb-br ] || git clone --depth=1 https://github.com/tardellirs/mteb-br.git
+pip install -q -e ./mteb-br/
 
 if [ "$SMOKE_TEST" = "1" ]; then
   echo "=== SMOKE: precompute 512 (4B+8B) + smoke multi-teacher train ==="
