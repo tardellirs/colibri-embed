@@ -5,7 +5,7 @@
 **A tiny embedding model that punches far above its weight.**
 
 [![🤗 Model](https://img.shields.io/badge/🤗%20Hugging%20Face-Model-yellow)](https://huggingface.co/tardellirs/colibri-embed-ptbr)
-[![MTEB(por)](https://img.shields.io/badge/MTEB(por)-0.6501-1f6feb)](https://huggingface.co/spaces/MTEB-BR/leaderboard)
+[![MTEB-BR](https://img.shields.io/badge/MTEB--BR-0.6501-1f6feb)](https://huggingface.co/spaces/MTEB-BR/leaderboard)
 [![Params](https://img.shields.io/badge/params-~157M-informational)](#)
 [![Dim](https://img.shields.io/badge/dim-768-informational)](#)
 [![License](https://img.shields.io/badge/model-Gemma-green)](https://ai.google.dev/gemma/terms)
@@ -19,7 +19,7 @@
 
 Colibri is a compact **Brazilian-Portuguese text-embedding model** derived from
 [`google/embeddinggemma-300m`](https://huggingface.co/google/embeddinggemma-300m). Despite being **half the size**,
-it **matches or beats much larger multilingual embedders on MTEB(por)** — including 7B and 27B models — and is
+it **matches or beats much larger multilingual embedders on MTEB-BR** — including 7B and 27B models — and is
 **designed small on purpose so it runs comfortably on a simple CPU VPS**, with no GPU required.
 
 This repository holds the **training / evaluation pipeline** and the figures. The model itself lives on the Hub:
@@ -27,7 +27,7 @@ This repository holds the **training / evaluation pipeline** and the figures. Th
 
 ## ✨ Highlights
 
-- 🏆 **Beats bigger models** on MTEB(por) — including `embeddinggemma-300m`, and 7B / 27B multilingual embedders.
+- 🏆 **Beats bigger models** on MTEB-BR — including `embeddinggemma-300m`, and 7B / 27B multilingual embedders.
 - 🪶 **Half the footprint** of `embeddinggemma-300m`: ~607 MB vs ~1.2 GB, and less RAM.
 - 💻 **Runs on a $-few/month CPU VPS** — benchmarked on 4 vCPU / 16 GB (no GPU).
 - 🔌 **Plain `SentenceTransformer`** — no adapters, no LoRA at inference. Drop-in.
@@ -37,12 +37,12 @@ This repository holds the **training / evaluation pipeline** and the figures. Th
 
 ## 🥇 Size ↔ quality frontier
 
-Colibri sits on the **open-model Pareto frontier** for MTEB(por) — it **dominates its own base**
+Colibri sits on the **open-model Pareto frontier** for MTEB-BR — it **dominates its own base**
 `embeddinggemma-300m` (half the size, higher score) and matches models up to ~10× larger:
 
-![MTEB(por) open-model size vs quality frontier — Colibri anchors the knee](figures/pareto.png)
+![MTEB-BR open-model size vs quality frontier — Colibri anchors the knee](figures/pareto.png)
 
-| Model | Params | MTEB(por) |
+| Model | Params | MTEB-BR |
 |---|---:|:---:|
 | 🐦 **Colibri** | **~157M** | **0.6501** |
 | google/embeddinggemma-300m | 300M | 0.6490 |
@@ -54,7 +54,7 @@ Colibri sits on the **open-model Pareto frontier** for MTEB(por) — it **domina
 | microsoft/harrier-oss-v1-27b | 27B | 0.6390 |
 | BAAI/bge-m3 | 568M | 0.6157 |
 
-> Evaluated on **[MTEB(por)](https://huggingface.co/spaces/MTEB-BR/leaderboard)** — 22 native Brazilian-Portuguese tasks
+> Evaluated on **[MTEB-BR](https://huggingface.co/spaces/MTEB-BR/leaderboard)** — 22 native Brazilian-Portuguese tasks
 > (retrieval, reranking, STS, classification, clustering, pair-classification). Score = mean over the 22 tasks.
 
 ---
@@ -128,7 +128,7 @@ Distillation checkpoints are combined (model soup) and linearly merged with the 
 (θ = 0.35·base + 0.65·soup), with the mixing weight chosen on held-out validation. Everything yields ordinary
 weights, so the published model is a single standalone encoder.
 
-> **Evaluation integrity:** trained only on training / non-evaluation splits — every MTEB(por) evaluation example
+> **Evaluation integrity:** trained only on training / non-evaluation splits — every MTEB-BR evaluation example
 > is held out, so the scores reflect generalization, not memorization.
 
 Full run log & numbers: [`RESULTS.md`](RESULTS.md). Orchestrator: [`scripts/run_distill_v2.sh`](scripts/run_distill_v2.sh).
@@ -137,32 +137,39 @@ Full run log & numbers: [`RESULTS.md`](RESULTS.md). Orchestrator: [`scripts/run_
 
 ## 📁 Repository layout
 
+The pipeline runs in four stages — trim the vocab, distill from two teachers, soup &
+merge the checkpoints, then evaluate.
+
 ```
 scripts/
-  # 1 · vocabulary trimming
-  build_retrim_corpus.py      #    token-selection corpus (domains + Stack Overflow PT)
-  get_stackoverflow_pt.py     #    Stack Overflow em Português source
-  retrim_vocab.py             #    domain-aware 64k re-trim (300M → ~157M)
-  compare_trims.py            #    pick the best trim base on MTEB(por)
-  # 2 · multi-teacher distillation
-  build_distill_v2_corpus.py  #    assemble the ~100k PT-BR corpus (eval rows held out)
-  distill_precompute.py       #    precompute teacher (Qwen3-4B + 8B) embeddings
-  distill_train.py            #    multi-teacher relational KD (avg of two sim-matrices)
-  select_best.py              #    checkpoint selection by FaqBacen proxy
-  # 3 · model soup + merge
-  soup_eval.py                #    checkpoint soup + alpha merge
-  extend_sweep.py             #    fine alpha sweep (cheap mean_21 → mean_22 on the peak)
-  interpolate_eval.py         #    base↔ft weight interpolation + MTEB harness
-  # evaluation · benchmark · figure
-  run_mtebpt.py               #    official MTEB(por) 22-task evaluation
-  cpu_bench.py                #    CPU latency / RAM benchmark
-  variant_quality.py          #    Matryoshka dims + fp16 quality
-  make_colibri_pareto.py      #    the frontier figure above
-  run_distill_v2.sh           #    end-to-end orchestrator
-  run_compare.sh · run_cpu_bench.sh · run_bench.sh · run_quality.sh
-docs/teacher_survey.md        # why Qwen3-4B + 8B (multi-teacher rationale)
-figures/pareto.png
-RESULTS.md                    # full run log & per-task numbers
+│
+├─ ①  Vocabulary trimming
+│  ├── build_retrim_corpus.py       # token-selection corpus (domains + Stack Overflow PT)
+│  ├── get_stackoverflow_pt.py      # Stack Overflow em Português source
+│  ├── retrim_vocab.py              # domain-aware 64k re-trim (300M → ~157M)
+│  └── compare_trims.py             # pick the best trim base on MTEB-BR
+│
+├─ ②  Multi-teacher distillation
+│  ├── build_distill_v2_corpus.py   # assemble the ~100k PT-BR corpus (eval rows held out)
+│  ├── distill_precompute.py        # precompute teacher (Qwen3-4B + 8B) embeddings
+│  ├── distill_train.py             # multi-teacher relational KD (avg of two sim-matrices)
+│  └── select_best.py               # checkpoint selection by FaqBacen proxy
+│
+├─ ③  Model soup + merge
+│  ├── soup_eval.py                 # checkpoint soup + alpha merge
+│  ├── extend_sweep.py              # fine alpha sweep (mean_21 → mean_22 on the peak)
+│  └── interpolate_eval.py          # base ↔ ft weight interpolation + MTEB harness
+│
+└─ ④  Evaluation · benchmark · figure
+   ├── run_mtebpt.py                # official MTEB-BR 22-task evaluation
+   ├── cpu_bench.py                 # CPU latency / RAM benchmark
+   ├── variant_quality.py           # Matryoshka dims + fp16 quality
+   ├── make_colibri_pareto.py       # the frontier figure above
+   └── run_*.sh                     # orchestrators (distill_v2 · compare · cpu_bench · bench · quality)
+
+docs/teacher_survey.md              # why Qwen3-4B + 8B (multi-teacher rationale)
+figures/pareto.png                  # the size ↔ quality frontier figure
+RESULTS.md                          # full run log & per-task numbers
 ```
 
 ---
@@ -176,7 +183,7 @@ RESULTS.md                    # full run log & per-task numbers
 ## 🙏 Acknowledgments
 
 We gratefully acknowledge **[Verda](https://verda.com/?utm_content=mteb-pt)** for the GPU compute credits that
-supported this work, and the **[MTEB(por)](https://huggingface.co/spaces/MTEB-BR/leaderboard)** benchmark maintainers.
+supported this work, and the **[MTEB-BR](https://huggingface.co/spaces/MTEB-BR/leaderboard)** benchmark maintainers.
 
 <div align="center">
 Built with vocabulary trimming · multi-teacher relational knowledge distillation · model soup. 🐦
