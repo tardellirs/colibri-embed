@@ -42,6 +42,37 @@ Tried llama.cpp GGUF quantization for edge/CPU. Two blockers:
 2. **Embeddings don't match the model** — even gemma-300m **f16** GGUF gives `cosine_vs_fp32 ≈ 0` (orthogonal). Cause: EmbeddingGemma's **Dense projection heads** (ST `2_Dense`/`3_Dense`) are SEPARATE safetensors; `convert_hf_to_gguf` only reads the transformer `model.safetensors`, so the projection is dropped → llama.cpp embeds the raw transformer, a different space than the ST model.
 GGUF efficiency numbers (llama.cpp ~2× faster + less RAM than torch) are moot without faithful embeddings. Verdict: GGUF needs an EmbeddingGemma-specific conversion that folds the Dense projection (Google's official embeddinggemma GGUF exists, so it's possible) + a tokenizer fix for the trim — a dedicated effort, deferred. **The validated CPU/VPS path is ONNX** (faithful, 2.3× faster than fp32, less RAM than gemma-300m).
 
+## CPU re-measure + GGUF (2026-11-09) — supersedes the RAM column above
+Same Verda CPU.4V.16G (AMD EPYC 7C13, 4 threads), one fresh process per row, peak = ru_maxrss (llama-server: VmHWM).
+sentence-transformers 5.7.0, transformers 4.57.6, onnxruntime 1.31.1, torch 2.11 cpu, llama.cpp a4d4f2f.
+
+| runtime | file | peak RAM | p50 | throughput | cos vs fp32 (mean / min) |
+|---|---:|---:|---:|---:|---|
+| fp32 torch | 607 MB | 1,035 MB | 77 ms | 33/s | ref |
+| onnx, exported at load (`export=True`, repo had no onnx/) | 604 MB | 3,001 MB | 34 ms | 44/s | 1.0000 |
+| onnx, pre-exported model.onnx | 604 MB | 1,438 MB | 32 ms | 44/s | 1.0000 |
+| onnx, memory arena off | 604 MB | 1,416 MB | 34 ms | 43/s | 1.0000 |
+| onnx int8 dynamic | 153 MB | 888 MB | 22 ms | 71/s | 0.971 / 0.960 |
+| onnx int8 per-channel, MatMul only | 301 MB | 1,020 MB | 22 ms | 71/s | 0.951 / 0.928 |
+| GGUF f16 | 315 MB | 367 MB | 36 ms | 32/s | 1.0000 / 1.0000 |
+| GGUF Q8_0 | 169 MB | 229 MB | 35 ms | 31/s | 0.9996 / 0.9995 |
+| GGUF Q6_K | 137 MB | 199 MB | 42 ms | 33/s | 0.9978 / 0.9958 |
+| GGUF Q5_K_M | 122 MB | 185 MB | 39 ms | 31/s | 0.9950 / 0.9930 |
+| GGUF Q4_K_M | 111 MB | 217 MB | 31 ms | 38/s | 0.9857 / 0.9802 |
+
+**Where the ONNX RAM goes:** the old 2.9 GB was the in-process export (torch model + tracing + session). A bare
+onnxruntime session on the fp32 graph is 885 MB (889 with graph optimizations off, so no second optimized copy);
+sentence-transformers still imports torch (~480 MB), which is why ONNX stays above torch. Asked in
+https://huggingface.co/tardellirs/colibri-embed-ptbr/discussions/1.
+
+**GGUF now works** (the July blockers): BPE path with the 64k tokenizer.json, chkhsh registered as gemma's
+pre-tokenizer (`granite-embed-multi-311m`, embedding-vocab-trimmer `gguf_bpe_patch.py`), `--sentence-transformers-dense-modules`.
+Two tokenizer fixes, pushed to the model repo: (1) 6,246 vestigial added tokens with id >= 64000 removed (217/217
+texts tokenize the same on transformers 4.57 and 5.22); (2) `add_bos_token`/`add_eos_token` restored in
+tokenizer_config.json — transformers 5.x dropped them on save, so on 4.x the tokenizer left out the final `<eos>` and
+embeddings were off (cosine ~0.87 to the intended ones; llama.cpp adds `<eos>`, like 5.x). The embeddinggemma-300m
+rows above were not re-measured (gated model).
+
 ## Domain-aware RE-TRIM (2026-07-03) — StackOverflow is the key
 Which tasks did the plain 64k trim hurt vs full gemma-300m? All CLUSTERING: StackoverflowPt −0.032, WikiCat −0.030, MedPTcl −0.019 (vocab-coverage effect — the PT trim dropped tech-English/rare/medical tokens). BRTaxQA did NOT degrade (−0.001; the earlier −0.13 was an artifact).
 

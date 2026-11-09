@@ -28,10 +28,10 @@ This repository holds the **training / evaluation pipeline** and the figures. Th
 ## ✨ Highlights
 
 - 🏆 **Beats bigger models** on MTEB-BR — including `embeddinggemma-300m`, and 7B / 27B multilingual embedders.
-- 🪶 **Half the footprint** of `embeddinggemma-300m`: ~607 MB vs ~1.2 GB, and less RAM.
+- 🪶 **Half the footprint** of `embeddinggemma-300m`: ~607 MB vs ~1.2 GB; **229 MB of RAM** as GGUF Q8_0.
 - 💻 **Runs on a $-few/month CPU VPS** — benchmarked on 4 vCPU / 16 GB (no GPU).
 - 🔌 **Plain `SentenceTransformer`** — no adapters, no LoRA at inference. Drop-in.
-- 📐 **Matryoshka dimensions** (768 / 512 / 256 / 128) + an **fp16** branch + a **fast ONNX** path.
+- 📐 **Matryoshka dimensions** (768 / 512 / 256 / 128) + an **fp16** branch + a **fast ONNX** path + **GGUF** for llama.cpp.
 
 ---
 
@@ -77,11 +77,13 @@ d = model.encode(docs, prompt_name="document")    # "title: none | text: "
 print(model.similarity(q, d))
 ```
 
-**Faster on CPU — ONNX backend** (≈2× throughput, no pipeline changes):
+**Faster on CPU — ONNX backend** (about 2× faster, no pipeline changes):
 
 ```python
 model = SentenceTransformer("tardellirs/colibri-embed-ptbr", backend="onnx")
 ```
+
+**Least RAM — GGUF for llama.cpp** (229 MB): [`tardellirs/colibri-embed-ptbr-GGUF`](https://huggingface.co/tardellirs/colibri-embed-ptbr-GGUF).
 
 **Smaller vectors — Matryoshka** (truncate to 512 / 256 / 128):
 
@@ -93,17 +95,20 @@ model = SentenceTransformer("tardellirs/colibri-embed-ptbr", truncate_dim=256)
 
 ## 💻 Built for a simple CPU VPS
 
-Benchmarked head-to-head against `google/embeddinggemma-300m` on a **4 vCPU / 16 GB** VPS:
+Measured on a **4 vCPU / 16 GB** VPS (Verda `CPU.4V.16G`), 4 threads, Brazilian-Portuguese sentences:
 
-| Precision | Model | Model size | Peak RAM | Latency (p50) | Throughput |
-|---|---|---:|---:|---:|---:|
-| **fp32** | 🐦 **Colibri** | **607 MB** | **969 MB** | 76 ms | 37 sent/s |
-| fp32 | embeddinggemma-300m | 1211 MB | 1253 MB | 78 ms | 36 sent/s |
-| **ONNX** | 🐦 **Colibri** | ~600 MB | 2.9 GB | **33 ms** | **49 sent/s** |
-| ONNX | embeddinggemma-300m | ~1200 MB | 5.3 GB | 38 ms | 41 sent/s |
+| Runtime | Model size | Peak RAM | Latency (p50) | Throughput | Cosine vs fp32 |
+|---|---:|---:|---:|---:|:---:|
+| PyTorch fp32 (`SentenceTransformer`) | 607 MB | 1,035 MB | 77 ms | 33 sent/s | 1 (reference) |
+| ONNX (`backend="onnx"`) | 604 MB | 1,438 MB | 32 ms | 44 sent/s | 1.0000 |
+| ONNX int8 (dynamic quantization) | 153 MB | 888 MB | 22 ms | 71 sent/s | 0.971 |
+| **GGUF Q8_0** (llama.cpp, [GGUF repo](https://huggingface.co/tardellirs/colibri-embed-ptbr-GGUF)) | **169 MB** | **229 MB** | 35 ms | 31 sent/s | **0.9996** |
+| GGUF Q4_K_M | 111 MB | 217 MB | 31 ms | 38 sent/s | 0.986 |
 
-Half the size and less RAM, same encode latency (the vocabulary trim shrinks the token-embedding matrix, not the
-transformer compute) — you lose nothing in speed. See [`scripts/cpu_bench.py`](scripts/cpu_bench.py).
+GGUF Q8_0 in llama.cpp takes the least RAM with the same embeddings; ONNX is the fastest. The ONNX path used to peak
+at 2.9 GB because the model was exported at load time; `onnx/model.onnx` now ships in the model repo. Scripts:
+[`scripts/cpu_mem_bench.py`](scripts/cpu_mem_bench.py), [`scripts/gguf_bench.py`](scripts/gguf_bench.py),
+[`scripts/ort_session_mem.py`](scripts/ort_session_mem.py); details in [RESULTS.md](RESULTS.md).
 
 ---
 
@@ -163,6 +168,10 @@ scripts/
 └─ ④  Evaluation · benchmark · figure
    ├── run_mtebpt.py                # official MTEB-BR 22-task evaluation
    ├── cpu_bench.py                 # CPU latency / RAM benchmark
+   ├── cpu_mem_bench.py             # RAM per runtime: torch / ONNX (export vs pre-exported, int8)
+   ├── gguf_bench.py                # llama-server RAM, latency, cosine vs fp32
+   ├── ort_session_mem.py           # bare onnxruntime session RAM
+   ├── fix_tokenizer.py             # drop vestigial added tokens past the embedding matrix
    ├── variant_quality.py           # Matryoshka dims + fp16 quality
    ├── make_colibri_pareto.py       # the frontier figure above
    └── run_*.sh                     # orchestrators (distill_v2 · compare · cpu_bench · bench · quality)
